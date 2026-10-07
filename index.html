@@ -47,6 +47,7 @@ aside{min-height:0;display:flex;flex-direction:column;gap:12px}
 dl{display:grid;grid-template-columns:4.2em minmax(0,1fr);gap:4px 10px;margin:8px 0 0}
 dt{color:var(--muted);font-size:.82rem;padding-top:1px}
 dd{margin:0}
+.tip{margin:10px 0 0;font-size:.86rem;line-height:1.6;color:var(--ink);background:color-mix(in srgb,var(--accent) 8%,transparent);border-radius:10px;padding:8px 10px}
 .note{margin-top:8px;font-size:.85rem;color:var(--accent);font-weight:700}
 .index{flex:1;min-height:0;overflow:auto;padding:8px 10px}
 .index h3{font-size:.72rem;letter-spacing:.12em;color:var(--muted);margin:10px 6px 4px;font-weight:700}
@@ -112,6 +113,7 @@ dd{margin:0}
         <dt id="i-nt">神経</dt><dd id="i-n"></dd>
       </dl>
       <div class="note" id="i-note" hidden></div>
+      <p class="tip" id="i-tip" hidden></p>
     </div>
     <div class="card index" id="index"></div>
     <div class="credit">骨：NIH 3D の上肢モデル（右）を元に作成。筋と靱帯は、紐を付ける穴の位置と走行を簡略化して示しています。</div>
@@ -152,6 +154,8 @@ const INFO={
  "烏口肩峰靱帯":{g:"靱帯",o:"烏口突起",i:"肩峰",a:"骨頭の上の屋根（烏口肩峰アーチ）",note:"インピンジメント"},
  "下関節上腕靱帯（IGHL）":{g:"靱帯",o:"関節窩の前下縁",i:"上腕骨の解剖頸",a:"外転・外旋で骨頭が前下方へ外れるのを止める",note:"肩関節前方脱臼・バンカート損傷"},
 };
+const TRIVIA={"棘上筋": "肩峰の下の狭いすき間を通るので、腱板断裂やインピンジメントで一番傷みやすい。停止の少し手前は血流が少なく（クリティカルゾーン）、傷が治りにくい。腕を上げ始める最初の約15°を担う。", "棘下筋": "最も強い外旋筋。投球の減速期にはブレーキ役になる。肩甲上神経が肩甲棘の付け根で圧迫されると、この筋だけがやせる（バレーボール選手に多い）。", "小円筋": "腱板で唯一、腋窩神経の支配。棘下筋と一緒に外旋する。", "肩甲下筋": "腱板で最大・最強。肩甲骨と肋骨の間にあり、骨頭の前を押さえて前方脱臼を防ぐ。上腕二頭筋長頭の腱が溝から外れないよう押さえる役割もある。", "三角筋": "肩の丸みを作る筋。前部と後部は作用が逆（屈曲と伸展）。肩関節脱臼や外科頸骨折で腋窩神経が傷むと麻痺して肩の丸みが消える。筋肉注射の部位でもある。", "大胸筋": "停止の腱がねじれて付く（上の線維ほど下に付く）。ベンチプレスでの断裂が有名。", "大円筋": "広背筋と一緒に走り、並んで付くので「広背筋の小さな助手」と呼ばれる。", "烏口腕筋": "筋皮神経がこの筋を貫いて通る。", "上腕二頭筋": "長頭の腱は肩関節の中を通る。肘を90°に曲げたときの回外が一番強い（ドライバーで右ネジを締める動き）。長頭の腱が切れると力こぶが下にずれて盛り上がる（ポパイサイン）。", "上腕筋": "肘を曲げる主力。手のひらの向きに関係なく働く。二頭筋の下（深層）にある。", "上腕三頭筋": "肘を伸ばすのはほぼこの筋だけ。外側頭と内側頭の間を橈骨神経が通るので、上腕骨の骨幹骨折で橈骨神経麻痺が起きやすい。", "腕橈骨筋": "前腕の筋なのに肘を曲げる。親指を上にした中間位で一番強い（ジョッキを持ち上げる動き）。伸筋と同じ橈骨神経の支配。", "円回内筋": "2つの頭の間を正中神経が通り、ここで圧迫されることがある（円回内筋症候群）。", "回外筋": "橈骨神経の深枝（後骨間神経）が貫いて通り、ここで圧迫されることがある。肘を伸ばしたままの回外はこの筋が担う。", "短橈側手根伸筋": "握るたびに手首を固定する。テニス肘の主役。長橈側手根伸筋の下（深層）にある。", "橈側手根屈筋": "手首の手のひら側で腱が触れる。そのすぐ外側（親指側）で脈をとる（橈骨動脈）。"};
+const trivia=n=>{for(const k of Object.keys(TRIVIA).sort((a,b)=>b.length-a.length)) if(n.startsWith(k)) return TRIVIA[k]; return '';};
 const GROUPS=["肩：腱板","肩：表層","上腕","前腕・手","靱帯"];
 // anatomical directions of this specimen (three.js coordinates)
 const V=(x,y,z)=>new THREE.Vector3(x,y,z).normalize();
@@ -237,6 +241,7 @@ function select(m){
     document.getElementById('i-n').textContent=info.n||'—';
     document.getElementById('i-nt').hidden=lig; document.getElementById('i-n').hidden=lig;
     note.hidden=!info.note; note.textContent=info.note?`けがとの関係：${info.note}`:'';
+    const tip=document.getElementById('i-tip'), tv=trivia(m.name); tip.hidden=!tv; tip.textContent=tv?`豆知識：${tv}`:'';
     const ends=[[m.pts[0],lig?'--lig':'--origin',lig?'付着':'起始'],[m.pts[m.pts.length-1],lig?'--lig':'--insertion',lig?'付着':'停止']];
     for(const [p,c,label] of ends){
       const el=document.createElement('div'); el.className='tag'; el.textContent=label; el.style.background=`var(${c})`;
@@ -244,7 +249,7 @@ function select(m){
     }
     const mid=m.curve.getPointAt(0.5);
     controls.target.lerp(mid,0.6);
-  } else { note.hidden=true; controls.target.copy(center); }
+  } else { note.hidden=true; document.getElementById('i-tip').hidden=true; controls.target.copy(center); }
 }
 
 function buildIndex(){
